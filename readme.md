@@ -105,11 +105,49 @@ In the single-domain double-shot strategy, the model was provided not only the d
 - The model's responses appeared to be more reliable and specific, and the SQL queries generated for these questions were often well-formed with fewer syntax errors.
 - The friendly responses (after querying the database) were more concise and human-readable compared to the zero-shot strategy.
 
-### Comparison of Strategies:
-- The **zero-shot strategy** provided a more general approach and worked well for straightforward queries but sometimes lacked the specificity and clarity in responses.
-- The **single-domain double-shot strategy**, which included providing example queries, improved the model's accuracy and resulted in more refined SQL outputs and better-structured answers.
-- Both strategies were effective, but the second strategy (single-domain double-shot) helped in generating more appropriate responses for complex questions.
+
+# Prompting Strategies Comparison
+
+## Prompting Strategy Comparison: Zero-Shot vs. Double-Shot
+
+### Zero-Shot Strategy  
+Prompts had no examples—just schema and a request for a query.
+
+- **Query Style:** More verbose; included extra columns like user names.  
+- **Example:**  
+  ```sql
+  SELECT u.id, u.first_name, u.last_name 
+  FROM users u 
+  JOIN user_groups ug ON u.id = ug.user_id 
+  GROUP BY u.id 
+  HAVING COUNT(DISTINCT ug.group_id) > 1;
+  ```
+- **Errors:** One syntax error (`"ite SELECT"`) caused query failure.  
+- **Inconsistencies:** Style varied across questions.
+
+### Double-Shot Strategy  
+Prompts included one example query before requesting a new one.
+
+- **Query Style:** Simpler, more focused; typically selected only the needed columns (e.g., `user_id`).  
+- **Errors:** No syntax errors observed, but one logic error was present.  
+- **Issue:** The model hallucinated a unique top streak holder when the data showed a tie—both User1 and User5 had a streak of 19, but only one was returned.
 
 ---
+
+## Key Differences
+
+| Category             | Zero-Shot                     | Double-Shot                                 |
+|----------------------|-------------------------------|---------------------------------------------|
+| Query Complexity     | Verbose                       | Concise, minimal columns                    |
+| Syntax Errors        | One error detected            | None                                        |
+| Logic Errors         | None identified               | One hallucinated a unique top streak holder |
+| Column Selection     | Often includes extra details  | Focused on requested fields                 |
+| Style Consistency    | Inconsistent                  | Consistent across prompts                   |
+| Result Accuracy      | Incorrect due to hallucination| Incorrect due to hallucination              |
+
+---
+
+## Conclusion  
+Double-shot prompting yielded more consistent, syntactically correct, and focused queries. However, it still hallucinated a unique result when the data showed a tie. Though this error was not unique to Double-shot, I think chat just struggles with matching rows. Zero-shot produced more verbose queries and suffered from syntax inconsistency, but the core mistake around streak ties was shared.
 
 
